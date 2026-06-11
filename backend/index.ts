@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import { tavily } from "@tavily/core";
 import { PROMPT_TEMPLATE, SYSTEM_PROMPT } from "./prompt";
 import { prisma } from "./db";
+import { middleware } from "./middleware";
 
 
 dotenv.config();
@@ -20,13 +21,20 @@ const tavilyClient = tavily({
 });
 
 
-app.post('/signup', (req, res) => {
-    
+
+
+app.get('/conversation', middleware, (req, res) => {
+
+})
+
+app.get('/conversation/:converstaionId', middleware, (req, res) => {
+
 })
 
 
 
-app.post("/veridian_ask", async (req, res) => {
+
+app.post("/veridian_ask", middleware, async (req, res) => {
     try {
         const { query } = req.body;
 
@@ -88,16 +96,12 @@ app.post("/veridian_ask", async (req, res) => {
 });
 
 
-app.post('/veridian_ask/follow_up', async (req, res) => {
-
+app.post('/veridian_ask/follow_up', middleware, async (req, res) => {
 
 })
 
 
 
-
-
-
-app.listen(3000, () => {
+app.listen(3001, () => {
     console.log("Server running on port 3000");
 });
