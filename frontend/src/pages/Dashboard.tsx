@@ -32,9 +32,16 @@ export default function Dashboard() {
           data: { session },
         } = await supabase.auth.getSession();
         const jwt = session?.access_token;
-        axios.post(`${BACKEND_URL}`);
+        const response = await axios.get(`${BACKEND_URL}/conversations/`, {
+          headers: {
+            Authorization: jwt,
+          },
+        });
+
+        console.log(response.data);
       }
     }
+    getExistingConversation();
   }, [user]);
 
   return (
