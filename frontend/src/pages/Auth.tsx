@@ -1,11 +1,22 @@
 import { createClient } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 
-const supabase = createClient()
+const supabase = createClient(
+  process.env.VITE_SUPABASE_URL!,
+  process.env.VITE_SUPABASE_PUBLISHABLE_KEY!,
+);
 
 export default function Auth() {
-  function login() {
+  async function login(provider: "github" | "google") {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: provider,
+    });
 
+    if (error) {
+      alert("Error while Signing in");
+    } else {
+      alert("Signed In");
+    }
   }
 
   return (
