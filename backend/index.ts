@@ -1,8 +1,10 @@
 import express from "express";
 import Anthropic from "@anthropic-ai/sdk";
-import { tavily } from "@tavily/core";
 import dotenv from "dotenv";
+import { tavily } from "@tavily/core";
 import { PROMPT_TEMPLATE, SYSTEM_PROMPT } from "./prompt";
+import { prisma } from "./db";
+
 
 dotenv.config();
 
@@ -17,7 +19,14 @@ const tavilyClient = tavily({
     apiKey: process.env.TAVILY_API_KEY,
 });
 
-app.post("/conversation", async (req, res) => {
+
+app.post('/signup', (req, res) => {
+    
+})
+
+
+
+app.post("/veridian_ask", async (req, res) => {
     try {
         const { query } = req.body;
 
@@ -79,7 +88,8 @@ app.post("/conversation", async (req, res) => {
 });
 
 
-app.post('/follow_up', async (req, res) => {
+app.post('/veridian_ask/follow_up', async (req, res) => {
+
 
 })
 
