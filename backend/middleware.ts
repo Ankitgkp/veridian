@@ -37,7 +37,6 @@ export async function middleware(req: Request, res: Response, next: NextFunction
     return res.status(403).json({ message: "Invalid credentials" });
 }
 
-/** Like middleware but allows unauthenticated requests (sets userId to null). */
 export async function guestMiddleware(req: Request, res: Response, next: NextFunction) {
     const token = req.headers.authorization;
 

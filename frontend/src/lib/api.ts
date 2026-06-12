@@ -40,8 +40,6 @@ export interface StreamCallbacks {
   onError: (message: string) => void;
 }
 
-// ---- Non-streaming endpoints ----
-
 export async function fetchConversations(): Promise<Conversation[]> {
   const jwt = await getAuthHeader();
   const res = await axios.get<{ conversations: Conversation[] }>(
@@ -60,7 +58,12 @@ export async function fetchConversation(id: string): Promise<Conversation> {
   return res.data.conversation;
 }
 
-// ---- Streaming endpoints ----
+export async function deleteConversation(id: string): Promise<void> {
+  const jwt = await getAuthHeader();
+  await axios.delete(`${BACKEND_URL}/conversation/${id}`, {
+    headers: { Authorization: jwt },
+  });
+}
 
 async function consumeSSE(
   url: string,
@@ -96,9 +99,7 @@ async function consumeSSE(
 
     buffer += decoder.decode(value, { stream: true });
 
-    // SSE lines are separated by double newlines
     const parts = buffer.split("\n\n");
-    // Keep the last (potentially incomplete) part in the buffer
     buffer = parts.pop() ?? "";
 
     for (const part of parts) {

@@ -35,6 +35,7 @@ function generateSlug(query: string): string {
 
 app.get("/conversations", middleware, async (req, res) => {
     try {
+        //@ts-ignore
         const userId: string = req.userId;
 
         const conversations = await prisma.conversation.findMany({
@@ -62,7 +63,7 @@ app.get("/conversations", middleware, async (req, res) => {
 
 app.get("/conversation/:conversationId", middleware, async (req, res) => {
     try {
-        //@ts-ignor
+        //@ts-ignore
         const userId: string = req.userId;
         const { conversationId } = req.params;
 
@@ -93,6 +94,41 @@ app.get("/conversation/:conversationId", middleware, async (req, res) => {
     }
 });
 
+app.delete("/conversation/:conversationId", middleware, async (req, res) => {
+    try {
+        //@ts-ignore
+        const userId: string = req.userId;
+        const { conversationId } = req.params;
+
+        const conversation = await prisma.conversation.findFirst({
+            where: {
+                //@ts-ignore
+                OR: [{ id: conversationId }, { slug: conversationId }],
+                userId,
+            },
+        });
+
+        if (!conversation) {
+            return res.status(404).json({ message: "Conversation not found" });
+        }
+
+        await prisma.message.deleteMany({
+            where: { conversationId: conversation.id },
+        });
+        await prisma.conversation.delete({
+            where: { id: conversation.id },
+        });
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            message: "Internal Server Error",
+            error: error instanceof Error ? error.message : "Unknown Error",
+        });
+    }
+});
+
 app.post("/veridian_ask", guestMiddleware, async (req, res) => {
     try {
         //@ts-ignore
@@ -103,13 +139,11 @@ app.post("/veridian_ask", guestMiddleware, async (req, res) => {
             return res.status(400).json({ message: "Query is required" });
         }
 
-        // SSE headers
         res.setHeader("Content-Type", "text/event-stream");
         res.setHeader("Cache-Control", "no-cache");
         res.setHeader("Connection", "keep-alive");
         res.flushHeaders();
 
-        // Only persist to DB for authenticated users
         let conversationId: string | null = null;
         let conversationSlug: string | null = null;
 
@@ -129,7 +163,6 @@ app.post("/veridian_ask", guestMiddleware, async (req, res) => {
             conversationSlug = conversation.slug;
         }
 
-        // Send meta event (conversationId will be null for guests)
         res.write(`data: ${JSON.stringify({ type: "meta", conversationId, slug: conversationSlug, guest: !userId })}\n\n`);
 
         const searchResponse = await tavilyClient.search(query, {
@@ -137,7 +170,6 @@ app.post("/veridian_ask", guestMiddleware, async (req, res) => {
         });
         const webSearchResults = searchResponse.results;
 
-        // Send sources event
         const sources = webSearchResults.map((result, index) => ({
             index: index + 1,
             title: result.title,
@@ -150,7 +182,6 @@ app.post("/veridian_ask", guestMiddleware, async (req, res) => {
             JSON.stringify(webSearchResults, null, 2)
         ).replace("{{USER_QUERY}}", query);
 
-        // Stream the LLM response
         let fullAnswer = "";
         const stream = anthropic.messages.stream({
             model: "claude-haiku-4-5",
@@ -166,7 +197,6 @@ app.post("/veridian_ask", guestMiddleware, async (req, res) => {
 
         await stream.finalMessage();
 
-        // Save to DB only for authenticated users
         if (conversationId) {
             const sourcesText = webSearchResults
                 .map((result, index) => `${index + 1}. ${result.title}\n${result.url}`)
@@ -235,7 +265,6 @@ app.post("/veridian_ask/follow_up", middleware, async (req, res) => {
             },
         });
 
-        // SSE headers
         res.setHeader("Content-Type", "text/event-stream");
         res.setHeader("Cache-Control", "no-cache");
         res.setHeader("Connection", "keep-alive");
@@ -255,7 +284,6 @@ app.post("/veridian_ask/follow_up", middleware, async (req, res) => {
         });
         const webSearchResults = searchResponse.results;
 
-        // Send sources event
         const sources = webSearchResults.map((result, index) => ({
             index: index + 1,
             title: result.title,
@@ -270,7 +298,6 @@ app.post("/veridian_ask/follow_up", middleware, async (req, res) => {
 
         history.push({ role: "user", content: prompt });
 
-        // Stream the LLM response
         let fullAnswer = "";
         const stream = anthropic.messages.stream({
             model: "claude-haiku-4-5",
@@ -286,7 +313,6 @@ app.post("/veridian_ask/follow_up", middleware, async (req, res) => {
 
         await stream.finalMessage();
 
-        // Build full response for DB storage
         const sourcesText = webSearchResults
             .map((result, index) => `${index + 1}. ${result.title}\n${result.url}`)
             .join("\n\n");

@@ -7,17 +7,17 @@ import ConversationPage from "./pages/Conversation";
 import Sidebar from "./components/Sidebar";
 
 function Layout() {
-  const [sidebarRefresh, setSidebarRefresh] = useState(0);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   return (
     <div className="flex h-screen w-full overflow-hidden">
-      <Sidebar refresh={sidebarRefresh} />
+      <Sidebar
+        collapsed={sidebarCollapsed}
+        onToggle={() => setSidebarCollapsed((prev) => !prev)}
+      />
       <main className="flex flex-col flex-1 overflow-hidden">
         <Routes>
-          <Route
-            path="/"
-            element={<HomePage />}
-          />
+          <Route path="/" element={<HomePage />} />
           <Route
             path="/conversation/:conversationId"
             element={<ConversationPage />}

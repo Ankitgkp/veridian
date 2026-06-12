@@ -35,43 +35,45 @@ export default function ConversationPage() {
   const [hydrating, setHydrating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const hasInitialized = useRef(false);
 
-  // Track whether we've already kicked off the initial stream from Home
-  const streamingFromHome = useRef(false);
+  const currentSessionRef = useRef(0);
+  const getNewSession = useCallback(() => {
+    currentSessionRef.current += 1;
+    return currentSessionRef.current;
+  }, []);
 
-  // --- initial load ---
   useEffect(() => {
-    if (!conversationId || hasInitialized.current) return;
-    hasInitialized.current = true;
+    const session = getNewSession();
+
+    setExchanges([]);
+    setError(null);
+    setLoading(false);
+
+    if (!conversationId) return;
 
     if (conversationId === "guest") {
       if (state?.streaming && state?.initialQuery) {
-        streamingFromHome.current = true;
-        startNewStream(state.initialQuery);
+        startNewStream(state.initialQuery, session);
       } else {
         setError("Guest sessions are temporary and cannot be saved or loaded. Please start a new search.");
       }
       return;
     }
 
-    // Case 1: Navigated from Home with a pending stream
     if (state?.streaming && state?.initialQuery) {
-      streamingFromHome.current = true;
-      startNewStream(state.initialQuery);
+      startNewStream(state.initialQuery, session);
       return;
     }
 
-    // Case 2: Pre-computed answer from navigation state (legacy / non-streaming)
     if (state?.initialAnswer && state?.initialQuery) {
       setExchanges([{ query: state.initialQuery, answer: state.initialAnswer }]);
       return;
     }
 
-    // Case 3: Cold load — hydrate from backend
     setHydrating(true);
     fetchConversation(conversationId)
       .then((conv: Conversation) => {
+        if (currentSessionRef.current !== session) return;
         const msgs = conv.messages;
         const rebuilt: Exchange[] = [];
         for (let i = 0; i < msgs.length - 1; i += 2) {
@@ -83,29 +85,35 @@ export default function ConversationPage() {
         }
         setExchanges(rebuilt);
       })
-      .catch(() => setError("Failed to load conversation."))
-      .finally(() => setHydrating(false));
+      .catch(() => {
+        if (currentSessionRef.current !== session) return;
+        setError("Failed to load conversation.");
+      })
+      .finally(() => {
+        if (currentSessionRef.current !== session) return;
+        setHydrating(false);
+      });
   }, [conversationId]);
 
-  // Auto-scroll on content change
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [exchanges, loading]);
 
-  // --- Stream a brand-new question (first ask) ---
-  function startNewStream(query: string) {
+  function startNewStream(query: string, existingSession?: number) {
+    const session = existingSession ?? getNewSession();
     setError(null);
     setLoading(true);
-
-    // Add a placeholder exchange that will be filled progressively
-    setExchanges((prev) => [...prev, { query, answer: "", streaming: true }]);
+    setExchanges((prev) => {
+      if (currentSessionRef.current !== session) return prev;
+      return [...prev, { query, answer: "", streaming: true }];
+    });
 
     askQuestionStream(query, {
-      onMeta: () => {
-        // Already navigated — conversationId is in the URL
-      },
+      onMeta: () => {},
       onSources: (sources) => {
+        if (currentSessionRef.current !== session) return;
         setExchanges((prev) => {
+          if (currentSessionRef.current !== session) return prev;
           const updated = [...prev];
           const last = updated[updated.length - 1];
           if (last) updated[updated.length - 1] = { ...last, sources };
@@ -113,7 +121,9 @@ export default function ConversationPage() {
         });
       },
       onTextDelta: (delta) => {
+        if (currentSessionRef.current !== session) return;
         setExchanges((prev) => {
+          if (currentSessionRef.current !== session) return prev;
           const updated = [...prev];
           const last = updated[updated.length - 1];
           if (last) updated[updated.length - 1] = { ...last, answer: last.answer + delta };
@@ -121,7 +131,9 @@ export default function ConversationPage() {
         });
       },
       onDone: () => {
+        if (currentSessionRef.current !== session) return;
         setExchanges((prev) => {
+          if (currentSessionRef.current !== session) return prev;
           const updated = [...prev];
           const last = updated[updated.length - 1];
           if (last) updated[updated.length - 1] = { ...last, streaming: false };
@@ -130,26 +142,30 @@ export default function ConversationPage() {
         setLoading(false);
       },
       onError: (msg) => {
+        if (currentSessionRef.current !== session) return;
         setError(msg);
         setLoading(false);
       },
     });
   }
 
-  // --- Stream a follow-up ---
   const handleFollowUp = useCallback(
     (query: string) => {
       if (!conversationId || loading) return;
+      const session = getNewSession();
       setError(null);
       setLoading(true);
-
-      // Add placeholder
-      setExchanges((prev) => [...prev, { query, answer: "", streaming: true }]);
+      setExchanges((prev) => {
+        if (currentSessionRef.current !== session) return prev;
+        return [...prev, { query, answer: "", streaming: true }];
+      });
 
       askFollowUpStream(query, conversationId, {
         onMeta: () => {},
         onSources: (sources) => {
+          if (currentSessionRef.current !== session) return;
           setExchanges((prev) => {
+            if (currentSessionRef.current !== session) return prev;
             const updated = [...prev];
             const last = updated[updated.length - 1];
             if (last) updated[updated.length - 1] = { ...last, sources };
@@ -157,7 +173,9 @@ export default function ConversationPage() {
           });
         },
         onTextDelta: (delta) => {
+          if (currentSessionRef.current !== session) return;
           setExchanges((prev) => {
+            if (currentSessionRef.current !== session) return prev;
             const updated = [...prev];
             const last = updated[updated.length - 1];
             if (last) updated[updated.length - 1] = { ...last, answer: last.answer + delta };
@@ -165,7 +183,9 @@ export default function ConversationPage() {
           });
         },
         onDone: () => {
+          if (currentSessionRef.current !== session) return;
           setExchanges((prev) => {
+            if (currentSessionRef.current !== session) return prev;
             const updated = [...prev];
             const last = updated[updated.length - 1];
             if (last) updated[updated.length - 1] = { ...last, streaming: false };
@@ -174,77 +194,79 @@ export default function ConversationPage() {
           setLoading(false);
         },
         onError: (msg) => {
+          if (currentSessionRef.current !== session) return;
           setError(msg);
           setLoading(false);
         },
       });
     },
-    [conversationId, loading]
+    [conversationId, loading, getNewSession]
   );
 
   if (hydrating) {
     return (
       <div className="flex flex-1 items-center justify-center text-muted-foreground gap-2">
-        <Loader2 className="w-5 h-5 animate-spin" />
-        <span className="text-sm">Loading conversation…</span>
+        <Loader2 className="w-4 h-4 animate-spin" />
+        <span className="text-[13px]">Loading conversation…</span>
       </div>
     );
   }
 
   return (
     <div className="flex flex-col flex-1 min-h-screen">
-      {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-2xl mx-auto px-6 py-10 space-y-12">
+        <div className="max-w-[640px] mx-auto px-6 py-8">
           {exchanges.length === 0 && !hydrating && (
-            <p className="text-center text-muted-foreground text-sm">
+            <p className="text-center text-muted-foreground text-[13px] py-16">
               No messages yet.
             </p>
           )}
 
           {exchanges.map((ex, i) => (
-            <AnswerBlock
-              key={i}
-              userQuery={ex.query}
-              rawAnswer={ex.answer}
-              isLatest={i === exchanges.length - 1 && !ex.streaming}
-              onFollowUp={handleFollowUp}
-              isStreaming={ex.streaming}
-            />
+            <div key={i}>
+              {i > 0 && <div className="my-8 h-px bg-border" />}
+              <AnswerBlock
+                userQuery={ex.query}
+                rawAnswer={ex.answer}
+                sources={ex.sources}
+                isLatest={i === exchanges.length - 1 && !ex.streaming}
+                onFollowUp={handleFollowUp}
+                isStreaming={ex.streaming}
+              />
+            </div>
           ))}
 
           {error && (
-            <p className="text-center text-sm text-destructive animate-fade-in">{error}</p>
+            <p className="text-center text-[13px] text-destructive mt-4 animate-fade-in">{error}</p>
           )}
 
           <div ref={bottomRef} />
         </div>
       </div>
 
-      {/* Sticky follow-up input */}
-      <div className="sticky bottom-0 border-t border-border bg-background/90 backdrop-blur-md px-6 py-4">
-        <div className="max-w-2xl mx-auto">
+      <div className="border-t border-border bg-background px-6 py-3">
+        <div className="max-w-[640px] mx-auto">
           {conversationId === "guest" ? (
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-xl border border-primary/20 bg-primary/5 shadow-lg shadow-primary/5 animate-fade-in">
-              <div className="space-y-1 text-center sm:text-left">
-                <h4 className="text-sm font-semibold text-foreground flex items-center gap-1.5 justify-center sm:justify-start">
-                  <Sparkles className="w-4 h-4 text-primary" />
+            <div className="flex items-center justify-between gap-4 p-3.5 rounded-xl bg-card animate-fade-in">
+              <div className="space-y-0.5">
+                <h4 className="text-[13px] font-medium text-foreground flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-primary" />
                   Want to ask follow-up questions?
                 </h4>
-                <p className="text-xs text-muted-foreground">
-                  Sign in to keep the conversation going and save your search history.
+                <p className="text-[12px] text-muted-foreground">
+                  Sign in to keep the conversation going.
                 </p>
               </div>
               <button
                 onClick={() => navigate("/auth")}
-                className="px-4 py-2 rounded-lg bg-primary text-primary-foreground font-medium text-xs hover:bg-primary/95 transition-all shadow-md shadow-primary/25 whitespace-nowrap cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+                className="px-4 py-2 rounded-lg bg-primary text-primary-foreground font-medium text-[12px] hover:opacity-90 transition-opacity whitespace-nowrap cursor-pointer"
               >
-                Sign In to Continue
+                Sign In
               </button>
             </div>
           ) : (
             <SearchBox
-              placeholder="Ask a follow-up…"
+              placeholder="Ask a follow-up..."
               onSubmit={handleFollowUp}
               loading={loading}
             />

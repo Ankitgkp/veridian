@@ -1,9 +1,16 @@
 import tailwind from "bun-plugin-tailwind";
-import { rm } from "node:fs/promises";
+import { rm, cp } from "node:fs/promises";
 import path from "node:path";
 
 const outdir = path.join(process.cwd(), "dist");
 await rm(outdir, { recursive: true, force: true });
+
+try {
+  const publicDir = path.join(process.cwd(), "public");
+  await cp(publicDir, path.join(outdir), { recursive: true });
+} catch (e) {
+  console.error("Warning: could not copy public directory", e);
+}
 
 const entrypoints = [...new Bun.Glob("src/**/*.html").scanSync()];
 

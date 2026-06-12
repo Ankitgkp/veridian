@@ -10,7 +10,7 @@ interface SearchBoxProps {
 }
 
 export default function SearchBox({
-  placeholder = "Ask anything…",
+  placeholder = "Ask anything...",
   onSubmit,
   loading = false,
   autoFocus = false,
@@ -40,43 +40,51 @@ export default function SearchBox({
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = "auto";
-    el.style.height = Math.min(el.scrollHeight, 200) + "px";
+    el.style.height = Math.min(el.scrollHeight, 180) + "px";
   }
+
+  const hasValue = value.trim().length > 0;
 
   return (
     <div
-      className={`relative flex flex-col gap-2 rounded-2xl border border-border bg-card px-4 pt-4 pb-3 shadow-lg transition-shadow focus-within:border-primary/40 focus-within:shadow-primary/10 focus-within:shadow-xl ${className}`}
+      className={`relative flex flex-col rounded-xl border border-border bg-card transition-colors focus-within:border-[#3a3c3c] ${className}`}
     >
-      {/* Textarea */}
-      <textarea
-        ref={textareaRef}
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        onKeyDown={handleKeyDown}
-        onInput={handleInput}
-        placeholder={placeholder}
-        autoFocus={autoFocus}
-        rows={1}
-        className="w-full resize-none bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none leading-relaxed"
-        style={{ maxHeight: "200px" }}
-      />
+      <div className="px-4 pt-3.5 pb-2">
+        <textarea
+          ref={textareaRef}
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={handleKeyDown}
+          onInput={handleInput}
+          placeholder={placeholder}
+          autoFocus={autoFocus}
+          rows={1}
+          className="w-full resize-none bg-transparent text-[15px] text-foreground placeholder:text-muted-foreground outline-none leading-relaxed"
+          style={{ maxHeight: "180px" }}
+        />
+      </div>
 
-      {/* Bottom bar */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <Search className="w-3.5 h-3.5" />
-          <span>Search</span>
+      <div className="flex items-center justify-between px-3 pb-2.5">
+        <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer">
+            <Search className="w-3.5 h-3.5" />
+            <span>Search</span>
+          </div>
         </div>
 
         <button
           onClick={handleSubmit}
-          disabled={!value.trim() || loading}
-          className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground shadow transition-all hover:scale-105 hover:shadow-primary/30 disabled:opacity-30 disabled:cursor-not-allowed disabled:scale-100 cursor-pointer"
+          disabled={!hasValue || loading}
+          className={`flex h-7 w-7 items-center justify-center rounded-full transition-all cursor-pointer ${
+            hasValue
+              ? "bg-primary text-primary-foreground"
+              : "bg-muted text-muted-foreground"
+          } disabled:opacity-30 disabled:cursor-not-allowed`}
         >
           {loading ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
           ) : (
-            <ArrowUp className="w-4 h-4" />
+            <ArrowUp className="w-3.5 h-3.5" />
           )}
         </button>
       </div>

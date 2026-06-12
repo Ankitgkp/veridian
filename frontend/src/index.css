@@ -3,7 +3,9 @@
 
 @layer base {
   html {
-    /* @apply dark; */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
 
   :root {
@@ -14,33 +16,90 @@
     @apply min-w-[320px] min-h-screen m-0 bg-background text-foreground;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
+
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #333535;
+    border-radius: 100px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #444646;
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes pulse-subtle {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  50% { opacity: 0.4; }
 }
 
-@keyframes fade-in {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes slide-in-left {
-  from { opacity: 0; transform: translateX(-12px); }
-  to { opacity: 1; transform: translateX(0); }
+@keyframes blink-cursor {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
 }
 
 .animate-fade-in {
-  animation: fade-in 0.35s ease-out both;
-}
-
-.animate-slide-in-left {
-  animation: slide-in-left 0.3s ease-out both;
+  animation: fade-in 0.3s ease-out both;
 }
 
 .animate-pulse-subtle {
-  animation: pulse-subtle 1.5s ease-in-out infinite;
+  animation: pulse-subtle 2s ease-in-out infinite;
+}
+
+.animate-blink {
+  animation: blink-cursor 1s step-end infinite;
+}
+
+.prose-answer p {
+  @apply text-[15px] leading-7 text-foreground/85 mb-3.5 last:mb-0;
+}
+
+.prose-answer h1,
+.prose-answer h2,
+.prose-answer h3 {
+  @apply font-semibold text-foreground mt-5 mb-2;
+}
+.prose-answer h1 { @apply text-lg; }
+.prose-answer h2 { @apply text-base; }
+.prose-answer h3 { @apply text-sm; }
+
+.prose-answer ul,
+.prose-answer ol {
+  @apply pl-5 my-2.5 space-y-1;
+}
+.prose-answer ul { list-style-type: disc; }
+.prose-answer ol { list-style-type: decimal; }
+.prose-answer li {
+  @apply text-[15px] leading-7 text-foreground/85;
+}
+.prose-answer li::marker {
+  @apply text-muted-foreground;
+}
+
+.prose-answer blockquote {
+  @apply border-l-2 border-primary/30 pl-4 my-3 text-muted-foreground;
+}
+
+.prose-answer pre {
+  @apply bg-muted rounded-lg p-3.5 my-3 overflow-x-auto text-sm font-mono;
+}
+
+.prose-answer a {
+  @apply text-primary hover:underline transition-colors;
+}
+
+.prose-answer hr {
+  @apply border-border my-5;
 }
 
 @media (prefers-reduced-motion) {

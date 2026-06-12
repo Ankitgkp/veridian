@@ -3,8 +3,18 @@ import index from "./index.html";
 
 const server = serve({
   routes: {
-    // Serve index.html for all unmatched routes.
     "/*": index,
+    "/favicon.ico": Bun.file("public/favicon/favicon.ico"),
+    "/apple-touch-icon.png": Bun.file("public/favicon/apple-touch-icon.png"),
+    "/web-app-manifest-192x192.png": Bun.file("public/favicon/web-app-manifest-192x192.png"),
+    "/web-app-manifest-512x512.png": Bun.file("public/favicon/web-app-manifest-512x512.png"),
+    "/favicon/apple-touch-icon.png": Bun.file("public/favicon/apple-touch-icon.png"),
+    "/favicon/favicon-96x96.png": Bun.file("public/favicon/favicon-96x96.png"),
+    "/favicon/favicon.ico": Bun.file("public/favicon/favicon.ico"),
+    "/favicon/favicon.svg": Bun.file("public/favicon/favicon.svg"),
+    "/favicon/site.webmanifest": Bun.file("public/favicon/site.webmanifest"),
+    "/favicon/web-app-manifest-192x192.png": Bun.file("public/favicon/web-app-manifest-192x192.png"),
+    "/favicon/web-app-manifest-512x512.png": Bun.file("public/favicon/web-app-manifest-512x512.png"),
 
     "/api/hello": {
       async GET(req) {
@@ -30,10 +40,8 @@ const server = serve({
   },
 
   development: process.env.NODE_ENV !== "production" && {
-    // Enable browser hot reloading in development
     hmr: true,
 
-    // Echo console logs from the browser to the server
     console: true,
   },
 });

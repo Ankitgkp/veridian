@@ -29,24 +29,19 @@ export default function Auth() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-6 bg-background">
-      {/* Card */}
-      <div className="w-full max-w-sm space-y-8 animate-fade-in">
-        {/* Brand */}
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center shadow-lg shadow-primary/10">
-            <Sparkles className="w-7 h-7 text-primary" />
-          </div>
+      <div className="w-full max-w-[340px] animate-fade-in">
+        <div className="flex flex-col items-center gap-3 mb-8">
+          <img src="/favicon/favicon.svg" alt="Veridian Logo" className="w-10 h-10 shrink-0" />
           <div className="text-center">
-            <h1 className="text-3xl font-semibold tracking-tight text-foreground">veridian</h1>
-            <p className="mt-1.5 text-sm text-muted-foreground">Sign in to save your search history</p>
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">veridian</h1>
+            <p className="mt-1.5 text-[13px] text-muted-foreground">Sign in to save your search history</p>
           </div>
         </div>
 
-        {/* Buttons */}
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           <button
             onClick={() => login("google")}
-            className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl border border-border bg-card text-sm font-medium text-foreground hover:bg-secondary hover:border-primary/20 transition-all cursor-pointer"
+            className="w-full flex items-center justify-center gap-2.5 px-4 py-2.5 rounded-lg bg-card text-[13px] font-medium text-foreground hover:bg-[#282a2a] transition-colors cursor-pointer"
           >
             <GoogleIcon />
             Continue with Google
@@ -54,14 +49,14 @@ export default function Auth() {
 
           <button
             onClick={() => login("github")}
-            className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl border border-border bg-card text-sm font-medium text-foreground hover:bg-secondary hover:border-primary/20 transition-all cursor-pointer"
+            className="w-full flex items-center justify-center gap-2.5 px-4 py-2.5 rounded-lg bg-card text-[13px] font-medium text-foreground hover:bg-[#282a2a] transition-colors cursor-pointer"
           >
             <GithubIcon />
             Continue with GitHub
           </button>
         </div>
 
-        <p className="text-center text-xs text-muted-foreground">
+        <p className="text-center text-[11px] text-muted-foreground mt-6 leading-relaxed">
           By continuing, you agree to our{" "}
           <span className="underline underline-offset-2 cursor-pointer hover:text-foreground transition-colors">Terms of Service</span>
           {" "}and{" "}
