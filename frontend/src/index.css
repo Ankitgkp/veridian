@@ -102,9 +102,56 @@
   @apply border-border my-5;
 }
 
+
+@keyframes border-beam {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes fade-beam {
+  0% {
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.animate-border-beam {
+  animation: border-beam 2s linear infinite, fade-beam 4s ease-in-out forwards;
+}
+
+@keyframes button-color-fade {
+  0% {
+    background-color: #1B4542;
+  }
+  85% {
+    background-color: #1B4542;
+  }
+  100% {
+    background-color: var(--card);
+  }
+}
+
+.animate-button-color {
+  animation: button-color-fade 4s ease-in-out;
+}
+
+
 @media (prefers-reduced-motion) {
   *, ::before, ::after {
     animation: none !important;
     transition: none !important;
   }
 }
+
