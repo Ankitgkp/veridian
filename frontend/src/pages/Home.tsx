@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { askQuestionStream } from "@/lib/api";
 import SearchBox from "@/components/SearchBox";
 import { Search, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -37,28 +36,19 @@ export default function HomePage() {
   }, []);
 
   function handleSearch(query: string) {
+    const trimmed = query.trim();
+    if (!trimmed) return;
     setError(null);
-    setLoading(true);
 
-    askQuestionStream(query, {
-      onMeta: (meta) => {
-        if (!user) {
-          const newCount = guestCount + 1;
-          setGuestCount(newCount);
-          localStorage.setItem("veridian_guest_prompts", newCount.toString());
-        }
-        const targetId = meta.conversationId || "guest";
-        navigate(`/conversation/${targetId}`, {
-          state: { initialQuery: query, streaming: true },
-        });
-      },
-      onSources: () => {},
-      onTextDelta: () => {},
-      onDone: () => setLoading(false),
-      onError: (msg) => {
-        setError(msg || "Something went wrong. Are you signed in?");
-        setLoading(false);
-      },
+    const targetId = user ? "new" : "guest";
+    if (!user) {
+      const newCount = guestCount + 1;
+      setGuestCount(newCount);
+      localStorage.setItem("veridian_guest_prompts", newCount.toString());
+    }
+
+    navigate(`/conversation/${targetId}`, {
+      state: { initialQuery: trimmed, streaming: true },
     });
   }
 

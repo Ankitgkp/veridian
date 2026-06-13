@@ -45,6 +45,10 @@ export default function Sidebar({ refresh = 0, collapsed = false, onToggle }: Si
     return () => listener.subscription.unsubscribe();
   }, []);
 
+  const activeId = location.pathname.startsWith("/conversation/")
+    ? location.pathname.split("/conversation/")[1]
+    : null;
+
   useEffect(() => {
     if (!user) { setConversations([]); return; }
     setLoadingConvs(true);
@@ -52,11 +56,7 @@ export default function Sidebar({ refresh = 0, collapsed = false, onToggle }: Si
       .then(setConversations)
       .catch(() => setConversations([]))
       .finally(() => setLoadingConvs(false));
-  }, [user, refresh]);
-
-  const activeId = location.pathname.startsWith("/conversation/")
-    ? location.pathname.split("/conversation/")[1]
-    : null;
+  }, [user, refresh, activeId]);
 
   async function handleDelete(e: React.MouseEvent, convId: string) {
     e.stopPropagation();

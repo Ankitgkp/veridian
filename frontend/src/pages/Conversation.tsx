@@ -37,39 +37,42 @@ export default function ConversationPage() {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const currentSessionRef = useRef(0);
+  const loadedConversationIdRef = useRef<string | null>(null);
   const getNewSession = useCallback(() => {
     currentSessionRef.current += 1;
     return currentSessionRef.current;
   }, []);
 
   useEffect(() => {
+    if (!conversationId) return;
+
+    if (conversationId === loadedConversationIdRef.current) {
+      return;
+    }
+
     const session = getNewSession();
 
     setExchanges([]);
     setError(null);
     setLoading(false);
 
-    if (!conversationId) return;
-
-    if (conversationId === "guest") {
+    if (conversationId === "new" || conversationId === "guest") {
       if (state?.streaming && state?.initialQuery) {
+        loadedConversationIdRef.current = conversationId;
         startNewStream(state.initialQuery, session);
       } else {
-        setError("Guest sessions are temporary and cannot be saved or loaded. Please start a new search.");
+        navigate("/");
       }
       return;
     }
 
-    if (state?.streaming && state?.initialQuery) {
-      startNewStream(state.initialQuery, session);
-      return;
-    }
-
     if (state?.initialAnswer && state?.initialQuery) {
+      loadedConversationIdRef.current = conversationId;
       setExchanges([{ query: state.initialQuery, answer: state.initialAnswer }]);
       return;
     }
 
+    loadedConversationIdRef.current = conversationId;
     setHydrating(true);
     fetchConversation(conversationId)
       .then((conv: Conversation) => {
@@ -93,7 +96,7 @@ export default function ConversationPage() {
         if (currentSessionRef.current !== session) return;
         setHydrating(false);
       });
-  }, [conversationId]);
+  }, [conversationId, navigate, state]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -109,7 +112,14 @@ export default function ConversationPage() {
     });
 
     askQuestionStream(query, {
-      onMeta: () => {},
+      onMeta: (meta) => {
+        if (currentSessionRef.current !== session) return;
+        const targetId = meta.slug || meta.conversationId;
+        if (targetId) {
+          loadedConversationIdRef.current = targetId;
+          navigate(`/conversation/${targetId}`, { replace: true });
+        }
+      },
       onSources: (sources) => {
         if (currentSessionRef.current !== session) return;
         setExchanges((prev) => {
